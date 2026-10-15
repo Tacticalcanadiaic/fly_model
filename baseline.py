@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print("Building the referee's distance table...")
     dist, puzzles = distance_table(TABLE_DEPTH, keep_up_to=MAX_DEPTH)
 
-    brain = FlyBrain(device="auto")
+    brain = FlyBrain(device="cpu")
     encoder = CubeEncoder(brain)
     eyes = FlyEyes(brain, encoder, random.Random(0))
 
