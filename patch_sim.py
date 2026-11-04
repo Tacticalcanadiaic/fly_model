@@ -1,6 +1,7 @@
 """
 patch_sim.py - run the cut-down optic lobe patch as a spiking network in PyTorch.
 
+
 This is our own simulator, built so we can train it later. It follows the same
 idea as flybrain (leaky integrate-and-fire neurons, 20 ms steps), but it is not
 a copy of flybrain's exact settings, which we don't know.
@@ -96,7 +97,7 @@ class Patch(torch.nn.Module):
     def forward(self, drive):
         """drive: (steps, n, batch) input for every neuron at every step.
         Returns spikes with the same shape."""
-        W = torch.sparse_coo_tensor(self.index, self.weights, (self.n, self.n))
+        W = torch.sparse_coo_tensor(self.index, self.weights, (self.n, self.n), check_invariants=False)
         v = torch.zeros(drive.shape[1:], device=drive.device)
         s = torch.zeros_like(v)
         out = []
@@ -138,16 +139,16 @@ def main():
     # ---- Sweep the connection scale ----
     print("Scale  | others that fired | spikes per step after stimulus ends")
     with torch.no_grad():                       # no training yet, so skip gradients
-        for mult in [0.5, 1, 2, 4]:
+        for mult in [0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
             spikes = Patch(W_in, base * mult).to(device)(drive)[:, :, 0].cpu().numpy()
             fired = spikes[:, others].any(axis=0).mean()
             after = spikes[STIM_STEPS + 3:, others].sum(axis=1).mean()
             print(f"{mult:>4}x  | {fired:>17.1%} | {after:,.1f}")
 
         # ---- A closer look at 1x ----
-        spikes = Patch(W_in, base).to(device)(drive)[:, :, 0].cpu().numpy()
+        spikes = Patch(W_in, base * 0.4).to(device)(drive)[:, :, 0].cpu().numpy()
 
-    print("\nNon-input spikes per step at 1x (stimulus on for the first "
+    print("\nNon-input spikes per step at 0.4x (stimulus on for the first "
           f"{STIM_STEPS} steps):")
     print(" ".join(str(int(x)) for x in spikes[:, others].sum(axis=1)))
 
@@ -164,3 +165,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
